@@ -1,15 +1,17 @@
 rss
 =====
-
  [![GoDoc](https://godoc.org/github.com/SlyMarbo/rss?status.svg)](https://godoc.org/github.com/SlyMarbo/rss)
 
-RSS is a small library for simplifying the parsing of RSS and Atom feeds.
-The package could do with more testing, but it conforms to the RSS 1.0, 2.0, and Atom 1.0
-specifications, to the best of my ability. I've tested it with about 15 different feeds,
-and it seems to work fine with them.
+**This repository is a fork of [SkyMarbo/rss](http://github.com/SkyMarbo/rss)
+with [JSON Feed v1](https://jsonfeed.org/) support.**
 
-If anyone has any problems with feeds being parsed incorrectly, please let me know so that
-I can debug and improve the package.
+RSS is a small library for simplifying the parsing of RSS and Atom feeds.
+The package could do with more testing, but it conforms to the RSS 1.0, 2.0,
+Atom 1.0, and JSON Feed v1 specifications, to the best of my ability. I've
+tested it with about 15 different feeds, and it seems to work fine with them.
+
+If anyone has any problems with feeds being parsed incorrectly, please let me
+know so that I can debug and improve the package.
 
 Dependencies:
 ```bash
@@ -74,7 +76,7 @@ type Image struct {
 The library does its best to follow the appropriate specifications and not to set the Refresh time
 too soon. It currently follows all update time management methods in the RSS 1.0, 2.0, and Atom 1.0
 specifications. If one is not provided, it defaults to 12 hour intervals (see DefaultRefreshInterval). If you are having issues
-with feed providors dropping connections, please let me know and I can increase this default, or you
+with feed providers dropping connections, please let me know and I can increase this default, or you
 can increase the Refresh time manually. The Feed.Update method uses this Refresh time, so if Update
 seems to be returning very quickly with no new items, it's likely not making a request due to the
 provider's Refresh interval.
