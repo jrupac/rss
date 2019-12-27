@@ -1,4 +1,4 @@
-module github.com/SlyMarbo/rss
+module github.com/jrupac/rss
 
 go 1.17
 
