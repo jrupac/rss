@@ -136,3 +136,27 @@ func TestParseCategories(t *testing.T) {
 		}
 	}
 }
+
+func TestParseMultipleLinks(t *testing.T) {
+	tests := map[string]string{
+		"rss_2.0_links_single":   "link_a",
+		"rss_2.0_links_multiple": "link_b",
+	}
+
+	for test, want := range tests {
+		name := filepath.Join("testdata", test)
+		data, err := ioutil.ReadFile(name)
+		if err != nil {
+			t.Fatalf("Reading %s: %v", name, err)
+		}
+
+		feed, err := Parse(data)
+		if err != nil {
+			t.Fatalf("Parsing %s: %v", name, err)
+		}
+
+		if feed.Items[0].Link != want {
+			t.Errorf("%s: got %q, want %q", name, feed.Items[0].Link, want)
+		}
+	}
+}

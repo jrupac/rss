@@ -27,12 +27,7 @@ func parseRSS2(data []byte) (*Feed, error) {
 	out := new(Feed)
 	out.Title = channel.Title
 	out.Description = channel.Description
-	for _, link := range channel.Link {
-		if link.Rel == "" && link.Type == "" && link.Href == "" && link.Chardata != "" {
-			out.Link = link.Chardata
-			break
-		}
-	}
+	out.Link = extractLink(channel.Link)
 	out.Image = channel.Image.Image()
 	if channel.MinsToLive != 0 {
 		sort.Ints(channel.SkipHours)
@@ -68,7 +63,8 @@ func parseRSS2(data []byte) (*Feed, error) {
 	for _, item := range channel.Items {
 
 		if item.ID == "" {
-			if item.Link == "" {
+			link := extractLink(item.Link)
+			if link == "" {
 				if debug {
 					fmt.Printf("[w] Item %q has no ID or link and will be ignored.\n", item.Title)
 					fmt.Printf("[w] %#v\n", item)
@@ -76,7 +72,7 @@ func parseRSS2(data []byte) (*Feed, error) {
 				warnings = true
 				continue
 			}
-			item.ID = item.Link
+			item.ID = link
 		}
 
 		// Skip items already known.
@@ -89,7 +85,7 @@ func parseRSS2(data []byte) (*Feed, error) {
 		next.Summary = item.Description
 		next.Content = item.Content
 		next.Categories = item.Categories
-		next.Link = item.Link
+		next.Link = extractLink(item.Link)
 		if item.Date != "" {
 			next.Date, err = parseTime(item.Date)
 			if err == nil {
@@ -122,6 +118,15 @@ func parseRSS2(data []byte) (*Feed, error) {
 	return out, nil
 }
 
+func extractLink(links []rss2_0Link) string {
+	for _, link := range links {
+		if link.Rel == "" && link.Type == "" && link.Href == "" && link.Chardata != "" {
+			return link.Chardata
+		}
+	}
+	return ""
+}
+
 type rss2_0Feed struct {
 	XMLName xml.Name       `xml:"rss"`
 	Channel *rss2_0Channel `xml:"channel"`
@@ -149,14 +154,14 @@ type rss2_0Link struct {
 type rss2_0Categories []string
 
 type rss2_0Item struct {
-	XMLName     xml.Name `xml:"item"`
-	Title       string   `xml:"title"`
-	Description string   `xml:"description"`
-	Content     string   `xml:"encoded"`
+	XMLName     xml.Name         `xml:"item"`
+	Title       string           `xml:"title"`
+	Description string           `xml:"description"`
+	Content     string           `xml:"encoded"`
 	Categories  rss2_0Categories `xml:"category"`
-	Link        string   `xml:"link"`
-	PubDate     string   `xml:"pubDate"`
-	Date        string   `xml:"date"`
+	Link        []rss2_0Link     `xml:"link"`
+	PubDate     string           `xml:"pubDate"`
+	Date        string           `xml:"date"`
 	DateValid   bool
 	ID          string            `xml:"guid"`
 	Enclosures  []rss2_0Enclosure `xml:"enclosure"`
