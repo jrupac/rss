@@ -1,8 +1,8 @@
 rss
 =====
- [![GoDoc](https://godoc.org/github.com/SlyMarbo/rss?status.svg)](https://godoc.org/github.com/SlyMarbo/rss)
+ [![GoDoc](https://godoc.org/github.com/jrupac/rss?status.svg)](https://godoc.org/github.com/jrupac/rss)
 
-**This repository is a fork of [SkyMarbo/rss](http://github.com/SkyMarbo/rss)
+**This repository is a fork of [SlyMarbo/rss](http://github.com/SlyMarbo/rss)
 with [JSON Feed v1](https://jsonfeed.org/) support.**
 
 RSS is a small library for simplifying the parsing of RSS and Atom feeds.
