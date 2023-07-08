@@ -160,3 +160,37 @@ func TestParseMultipleLinks(t *testing.T) {
 		}
 	}
 }
+
+func TestRss2_0ParseMediaThumbnail(t *testing.T) {
+	tests := map[string][]string{
+		"rss_2.0":                 {"", ""},
+		"rss_2.0_media_thumbnail": {"http://example.com/foo.jpg", "image/jpg"},
+	}
+
+	for test, want := range tests {
+		name := filepath.Join("testdata", test)
+		data, err := ioutil.ReadFile(name)
+		if err != nil {
+			t.Fatalf("Reading %s: %v", name, err)
+		}
+
+		feed, err := Parse(data)
+		if err != nil {
+			t.Fatalf("Parsing %s: %v", name, err)
+		}
+
+		encs := feed.Items[0].Enclosures
+		if len(encs) > 0 {
+			enc := encs[0]
+
+			if enc.URL != want[0] {
+				t.Errorf("%s: got %q, want %q", name, enc.URL, want[0])
+			}
+
+			if enc.Type != want[1] {
+				t.Errorf("%s: got %q, want %q", name, enc.Type, want[1])
+			}
+		}
+
+	}
+}
