@@ -108,10 +108,22 @@ func parseRSS2(data []byte) (*Feed, error) {
 			}
 		}
 		next.ID = item.ID
-		if len(item.Enclosures) > 0 {
-			next.Enclosures = make([]*Enclosure, len(item.Enclosures))
+
+		// Also convert `media:thumbnail` entries into enclosures
+		hasMediaThumbnail := item.Thumbnail.URL != ""
+		if len(item.Enclosures) > 0 || hasMediaThumbnail {
+			encLen := len(item.Enclosures)
+			if hasMediaThumbnail {
+				encLen += 1
+			}
+
+			next.Enclosures = make([]*Enclosure, encLen)
 			for i := range item.Enclosures {
 				next.Enclosures[i] = item.Enclosures[i].Enclosure()
+			}
+
+			if hasMediaThumbnail {
+				next.Enclosures[len(next.Enclosures)] = item.Thumbnail.Enclosure()
 			}
 		}
 		next.Read = false
@@ -196,8 +208,9 @@ type rss2_0Item struct {
 	PubDate     string           `xml:"pubDate"`
 	Date        string           `xml:"date"`
 	DateValid   bool
-	ID          string            `xml:"guid"`
-	Enclosures  []rss2_0Enclosure `xml:"enclosure"`
+	ID          string               `xml:"guid"`
+	Enclosures  []rss2_0Enclosure    `xml:"enclosure"`
+	Thumbnail   rss2_0mediaThumbnail `xml:"media:thumbnail"`
 }
 
 type rss2_0Enclosure struct {
@@ -231,5 +244,24 @@ func (i *rss2_0Image) Image() *Image {
 	out.URL = i.URL
 	out.Height = uint32(i.Height)
 	out.Width = uint32(i.Width)
+	return out
+}
+
+type rss2_0mediaThumbnail struct {
+	XMLName xml.Name `xml:"media:thumbnail"`
+	URL     string   `xml:"url"`
+	Height  int      `xml:"height"`
+	Width   int      `xml:"width"`
+}
+
+func (r *rss2_0mediaThumbnail) Enclosure() *Enclosure {
+	ext := r.URL[strings.LastIndex(r.URL, ".")+1:]
+
+	out := new(Enclosure)
+	out.URL = r.URL
+	// This is a heuristic since the MIME type isn't actually specified
+	out.Type = fmt.Sprintf("image/%s", ext)
+	// This is incorrect since the length (in bytes) is not specifie
+	out.Length = 0
 	return out
 }
