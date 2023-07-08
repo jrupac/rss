@@ -100,10 +100,11 @@ func parseRSS2(data []byte) (*Feed, error) {
 		next.ID = item.ID
 
 		// Also convert `media:thumbnail` entries into enclosures
-		hasMediaThumbnail := item.Thumbnail.URL != ""
-		if len(item.Enclosures) > 0 || hasMediaThumbnail {
+		hasMedia := item.MediaContent != mrssContent{} || item.MediaThumbnail != mrssThumbnail{}
+
+		if len(item.Enclosures) > 0 || hasMedia {
 			encLen := len(item.Enclosures)
-			if hasMediaThumbnail {
+			if hasMedia {
 				encLen += 1
 			}
 
@@ -112,8 +113,8 @@ func parseRSS2(data []byte) (*Feed, error) {
 				next.Enclosures[i] = item.Enclosures[i].Enclosure()
 			}
 
-			if hasMediaThumbnail {
-				next.Enclosures[len(item.Enclosures)] = item.Thumbnail.Enclosure()
+			if hasMedia {
+				next.Enclosures[len(item.Enclosures)] = item.MediaThumbnail.ToEnclosure()
 			}
 		}
 		next.Read = false
@@ -175,9 +176,12 @@ type rss2_0Item struct {
 	PubDate     string           `xml:"pubDate"`
 	Date        string           `xml:"date"`
 	DateValid   bool
-	ID          string               `xml:"guid"`
-	Enclosures  []rss2_0Enclosure    `xml:"enclosure"`
-	Thumbnail   rss2_0mediaThumbnail `xml:"media thumbnail"`
+	ID          string            `xml:"guid"`
+	Enclosures  []rss2_0Enclosure `xml:"enclosure"`
+	// Support for Yahoo Media RSS, see https://www.rssboard.org/media-rss.
+	MediaGroup     mrssGroup     `xml:"http://search.yahoo.com/mrss/ group"`
+	MediaContent   mrssContent   `xml:"http://search.yahoo.com/mrss/ content"`
+	MediaThumbnail mrssThumbnail `xml:"http://search.yahoo.com/mrss/ thumbnail"`
 }
 
 type rss2_0Enclosure struct {
@@ -212,21 +216,53 @@ func (i *rss2_0Image) Image() *Image {
 	return out
 }
 
-type rss2_0mediaThumbnail struct {
-	XMLName xml.Name `xml:"media thumbnail"`
-	URL     string   `xml:"url,attr"`
-	Height  int      `xml:"height,attr"`
-	Width   int      `xml:"width,attr"`
+// See https://www.rssboard.org/media-rss#media-group for details.
+type mrssGroup struct {
+	Contents []mrssContent `xml:"http://search.yahoo.com/mrss/ content"`
 }
 
-func (r *rss2_0mediaThumbnail) Enclosure() *Enclosure {
+// See https://www.rssboard.org/media-rss#media-content for details.
+type mrssContent struct {
+	URL          string `xml:"url,attr"`
+	FileSize     uint   `xml:"fileSize,attr"`
+	Type         string `xml:"type,attr"`
+	Medium       string `xml:"medium,attr"`
+	IsDefault    string `xml:"isDefault,attr"`
+	Expression   string `xml:"expression,attr"`
+	Bitrate      uint   `xml:"bitrate,attr"`
+	Framerate    uint   `xml:"framerate,attr"`
+	SamplingRate uint   `xml:"samplingrate,attr"`
+	Channels     uint   `xml:"channels,attr"`
+	Duration     uint   `xml:"duration,attr"`
+	Height       uint   `xml:"height,attr"`
+	Width        uint   `xml:"width,attr"`
+	Lang         string `xml:"lang,attr"`
+}
+
+func (r *mrssContent) ToEnclosure() *Enclosure {
+	out := new(Enclosure)
+	out.URL = r.URL
+	out.Type = r.Type
+	out.Length = r.FileSize
+	return out
+}
+
+// See https://www.rssboard.org/media-rss#media-thumbnails for details.
+type mrssThumbnail struct {
+	URL    string `xml:"url,attr"`
+	Height uint   `xml:"height,attr"`
+	Width  uint   `xml:"width,attr"`
+	Time   string `xml:"time,attr"`
+}
+
+func (r *mrssThumbnail) ToEnclosure() *Enclosure {
 	ext := r.URL[strings.LastIndex(r.URL, ".")+1:]
 
 	out := new(Enclosure)
 	out.URL = r.URL
 	// This is a heuristic since the MIME type isn't actually specified
 	out.Type = fmt.Sprintf("image/%s", ext)
-	// This is incorrect since the length (in bytes) is not specifie
+	// This is incorrect since the length (in bytes) is not specified
 	out.Length = 0
 	return out
 }
