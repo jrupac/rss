@@ -60,3 +60,37 @@ func TestParseAtomContent(t *testing.T) {
 		}
 	}
 }
+
+func TestParseMediaThumbnail(t *testing.T) {
+	tests := map[string][]string{
+		"atom_1.0-1":               {"", ""},
+		"atom_1.0_media_thumbnail": {"http://example.com/foo.jpg", "image/jpg"},
+	}
+
+	for test, want := range tests {
+		name := filepath.Join("testdata", test)
+		data, err := ioutil.ReadFile(name)
+		if err != nil {
+			t.Fatalf("Reading %s: %v", name, err)
+		}
+
+		feed, err := Parse(data)
+		if err != nil {
+			t.Fatalf("Parsing %s: %v", name, err)
+		}
+
+		encs := feed.Items[0].Enclosures
+		if len(encs) > 0 {
+			enc := encs[0]
+
+			if enc.URL != want[0] {
+				t.Errorf("%s: got %q, want %q", name, enc.URL, want[0])
+			}
+
+			if enc.Type != want[1] {
+				t.Errorf("%s: got %q, want %q", name, enc.Type, want[1])
+			}
+		}
+
+	}
+}
