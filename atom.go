@@ -133,11 +133,11 @@ type atomItem struct {
 	Date      string     `xml:"updated"`
 	DateValid bool
 	ID        string         `xml:"id"`
-	Thumbnail mediaThumbnail `xml:"media:thumbnail"`
+	Thumbnail mediaThumbnail `xml:"media thumbnail"`
 }
 
 type mediaThumbnail struct {
-	XMLName xml.Name `xml:"media:thumbnail"`
+	XMLName xml.Name `xml:"media thumbnail"`
 	URL     string   `xml:"url"`
 	Height  int      `xml:"height"`
 	Width   int      `xml:"width"`

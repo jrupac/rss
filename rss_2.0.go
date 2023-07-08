@@ -113,7 +113,7 @@ func parseRSS2(data []byte) (*Feed, error) {
 			}
 
 			if hasMediaThumbnail {
-				next.Enclosures[len(next.Enclosures)] = item.Thumbnail.Enclosure()
+				next.Enclosures[len(item.Enclosures)] = item.Thumbnail.Enclosure()
 			}
 		}
 		next.Read = false
@@ -177,7 +177,7 @@ type rss2_0Item struct {
 	DateValid   bool
 	ID          string               `xml:"guid"`
 	Enclosures  []rss2_0Enclosure    `xml:"enclosure"`
-	Thumbnail   rss2_0mediaThumbnail `xml:"media:thumbnail"`
+	Thumbnail   rss2_0mediaThumbnail `xml:"media thumbnail"`
 }
 
 type rss2_0Enclosure struct {
@@ -213,10 +213,10 @@ func (i *rss2_0Image) Image() *Image {
 }
 
 type rss2_0mediaThumbnail struct {
-	XMLName xml.Name `xml:"media:thumbnail"`
-	URL     string   `xml:"url"`
-	Height  int      `xml:"height"`
-	Width   int      `xml:"width"`
+	XMLName xml.Name `xml:"media thumbnail"`
+	URL     string   `xml:"url,attr"`
+	Height  int      `xml:"height,attr"`
+	Width   int      `xml:"width,attr"`
 }
 
 func (r *rss2_0mediaThumbnail) Enclosure() *Enclosure {

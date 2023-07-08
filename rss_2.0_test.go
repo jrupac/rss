@@ -163,8 +163,7 @@ func TestParseMultipleLinks(t *testing.T) {
 
 func TestRss2_0ParseMediaThumbnail(t *testing.T) {
 	tests := map[string][]string{
-		"rss_2.0":                 {"", ""},
-		"rss_2.0_media_thumbnail": {"http://example.com/foo.jpg", "image/jpg"},
+		"rss_2.0_media_thumbnail": {"http://example.com/image.jpg", "image/jpg"},
 	}
 
 	for test, want := range tests {
@@ -179,17 +178,14 @@ func TestRss2_0ParseMediaThumbnail(t *testing.T) {
 			t.Fatalf("Parsing %s: %v", name, err)
 		}
 
-		encs := feed.Items[0].Enclosures
-		if len(encs) > 0 {
-			enc := encs[0]
+		enc := feed.Items[0].Enclosures[0]
 
-			if enc.URL != want[0] {
-				t.Errorf("%s: got %q, want %q", name, enc.URL, want[0])
-			}
+		if enc.URL != want[0] {
+			t.Errorf("%s: got %q, want %q", name, enc.URL, want[0])
+		}
 
-			if enc.Type != want[1] {
-				t.Errorf("%s: got %q, want %q", name, enc.Type, want[1])
-			}
+		if enc.Type != want[1] {
+			t.Errorf("%s: got %q, want %q", name, enc.Type, want[1])
 		}
 
 	}
