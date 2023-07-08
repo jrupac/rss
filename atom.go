@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -62,6 +63,21 @@ func parseAtom(data []byte) (*Feed, error) {
 				})
 			}
 		}
+
+		// This is a bit of a hack to make `media:thumbnail` entries (which are not
+		// part of the Atom standard) show up as enclosures.
+		if url := item.Thumbnail.URL; url != "" {
+			ext := url[strings.LastIndex(url, ".")+1:]
+
+			next.Enclosures = append(next.Enclosures, &Enclosure{
+				URL: item.Thumbnail.URL,
+				// This is a heuristic since the MIME type isn't actually specified
+				Type: fmt.Sprintf("image/%s", ext),
+				// This is incorrect since the length (in bytes) is not specified
+				Length: 0,
+			})
+		}
+
 		next.Read = false
 
 		if next.ID == "" {
@@ -116,7 +132,15 @@ type atomItem struct {
 	Links     []atomLink `xml:"link"`
 	Date      string     `xml:"updated"`
 	DateValid bool
-	ID        string `xml:"id"`
+	ID        string         `xml:"id"`
+	Thumbnail mediaThumbnail `xml:"media:thumbnail"`
+}
+
+type mediaThumbnail struct {
+	XMLName xml.Name `xml:"media:thumbnail"`
+	URL     string   `xml:"url"`
+	Height  int      `xml:"height"`
+	Width   int      `xml:"width"`
 }
 
 type atomImage struct {
