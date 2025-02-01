@@ -44,12 +44,15 @@ func parseAtom(data []byte) (*Feed, error) {
 		next.Title = item.Title
 		next.Summary = item.Summary
 		next.Content = item.Content.RAWContent
-		if item.Date != "" {
-			next.Date, err = parseTime(item.Date)
-			if err == nil {
-				next.DateValid = true
-			}
+
+		if date, err := parseDate(item.Date); err == nil {
+			next.Date = date
+			next.DateValid = true
+		} else if date, err := parseDate(item.Published); err == nil {
+			next.Date = date
+			next.DateValid = true
 		}
+
 		next.ID = item.ID
 		for _, link := range item.Links {
 			if link.Rel == "alternate" || link.Rel == "" {
@@ -94,6 +97,13 @@ func parseAtom(data []byte) (*Feed, error) {
 	return out, nil
 }
 
+func parseDate(date string) (time.Time, error) {
+	if date == "" {
+		return time.Time{}, fmt.Errorf("no date specified")
+	}
+	return parseTime(date)
+}
+
 type RAWContent struct {
 	RAWContent string `xml:",innerxml"`
 }
@@ -115,6 +125,7 @@ type atomItem struct {
 	Content   RAWContent `xml:"content"`
 	Links     []atomLink `xml:"link"`
 	Date      string     `xml:"updated"`
+	Published string     `xml:"published"`
 	DateValid bool
 	ID        string `xml:"id"`
 }
