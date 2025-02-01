@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestParseAtomTitle(t *testing.T) {
@@ -61,10 +62,10 @@ func TestParseAtomContent(t *testing.T) {
 	}
 }
 
-func TestParseMediaThumbnail(t *testing.T) {
-	tests := map[string][]string{
-		"atom_1.0-1":               {"", ""},
-		"atom_1.0_media_thumbnail": {"http://example.com/foo.jpg", "image/jpg"},
+func TestParseAtomDate(t *testing.T) {
+	tests := map[string]string{
+		"atom_1.0_html":           "2003-12-13T18:30:02Z",
+		"atom_1.0_only_published": "2003-12-13T18:30:02Z",
 	}
 
 	for test, want := range tests {
@@ -79,18 +80,15 @@ func TestParseMediaThumbnail(t *testing.T) {
 			t.Fatalf("Parsing %s: %v", name, err)
 		}
 
-		encs := feed.Items[0].Enclosures
-		if len(encs) > 0 {
-			enc := encs[0]
+		date := feed.Items[0].Date
+		wantDate, err := time.Parse(time.RFC3339Nano, want)
 
-			if enc.URL != want[0] {
-				t.Errorf("%s: got %q, want %q", name, enc.URL, want[0])
-			}
-
-			if enc.Type != want[1] {
-				t.Errorf("%s: got %q, want %q", name, enc.Type, want[1])
-			}
+		if date != wantDate {
+			t.Errorf("%s: got %q, want %q", name, date, want)
 		}
 
+		if !feed.Items[0].DateValid {
+			t.Errorf("%s: Invalid date: %q", name, feed.Items[0].Date)
+		}
 	}
 }
