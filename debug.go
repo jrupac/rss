@@ -12,7 +12,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/SlyMarbo/rss"
+	"github.com/jrupac/rss"
 )
 
 func main() {

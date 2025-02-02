@@ -137,60 +137,6 @@ func TestParseCategories(t *testing.T) {
 	}
 }
 
-func TestParseMultipleLinks(t *testing.T) {
-	tests := map[string]string{
-		"rss_2.0_links_single":   "link_a",
-		"rss_2.0_links_multiple": "link_b",
-	}
-
-	for test, want := range tests {
-		name := filepath.Join("testdata", test)
-		data, err := ioutil.ReadFile(name)
-		if err != nil {
-			t.Fatalf("Reading %s: %v", name, err)
-		}
-
-		feed, err := Parse(data)
-		if err != nil {
-			t.Fatalf("Parsing %s: %v", name, err)
-		}
-
-		if feed.Items[0].Link != want {
-			t.Errorf("%s: got %q, want %q", name, feed.Items[0].Link, want)
-		}
-	}
-}
-
-func TestRss2_0ParseMediaThumbnail(t *testing.T) {
-	tests := map[string][]string{
-		"rss_2.0_media_thumbnail": {"http://example.com/image.jpg", "image/jpg"},
-	}
-
-	for test, want := range tests {
-		name := filepath.Join("testdata", test)
-		data, err := ioutil.ReadFile(name)
-		if err != nil {
-			t.Fatalf("Reading %s: %v", name, err)
-		}
-
-		feed, err := Parse(data)
-		if err != nil {
-			t.Fatalf("Parsing %s: %v", name, err)
-		}
-
-		enc := feed.Items[0].Enclosures[0]
-
-		if enc.URL != want[0] {
-			t.Errorf("%s: got %q, want %q", name, enc.URL, want[0])
-		}
-
-		if enc.Type != want[1] {
-			t.Errorf("%s: got %q, want %q", name, enc.Type, want[1])
-		}
-
-	}
-}
-
 func TestParseChannelCategories(t *testing.T) {
 	tests := map[string]int{
 		"rss_2.0-1_enclosure": 2,
@@ -249,5 +195,59 @@ func TestChannelProperties(t *testing.T) {
 func assertEqual(expected, got string, t *testing.T) {
 	if expected != got {
 		t.Errorf("expect '%s', got '%s'", expected, got)
+	}
+}
+
+func TestParseMultipleLinks(t *testing.T) {
+	tests := map[string]string{
+		"rss_2.0_links_single":   "link_a",
+		"rss_2.0_links_multiple": "link_b",
+	}
+
+	for test, want := range tests {
+		name := filepath.Join("testdata", test)
+		data, err := ioutil.ReadFile(name)
+		if err != nil {
+			t.Fatalf("Reading %s: %v", name, err)
+		}
+
+		feed, err := Parse(data)
+		if err != nil {
+			t.Fatalf("Parsing %s: %v", name, err)
+		}
+
+		if feed.Items[0].Link != want {
+			t.Errorf("%s: got %q, want %q", name, feed.Items[0].Link, want)
+		}
+	}
+}
+
+func TestRss2_0ParseMediaThumbnail(t *testing.T) {
+	tests := map[string][]string{
+		"rss_2.0_media_thumbnail": {"http://example.com/image.jpg", "image/jpg"},
+	}
+
+	for test, want := range tests {
+		name := filepath.Join("testdata", test)
+		data, err := ioutil.ReadFile(name)
+		if err != nil {
+			t.Fatalf("Reading %s: %v", name, err)
+		}
+
+		feed, err := Parse(data)
+		if err != nil {
+			t.Fatalf("Parsing %s: %v", name, err)
+		}
+
+		enc := feed.Items[0].Enclosures[0]
+
+		if enc.URL != want[0] {
+			t.Errorf("%s: got %q, want %q", name, enc.URL, want[0])
+		}
+
+		if enc.Type != want[1] {
+			t.Errorf("%s: got %q, want %q", name, enc.Type, want[1])
+		}
+
 	}
 }

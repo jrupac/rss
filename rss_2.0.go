@@ -11,7 +11,7 @@ import (
 
 func parseRSS2(data []byte) (*Feed, error) {
 	warnings := false
-	feed := rss2_0Feed{}
+	feed := rss20Feed{}
 	p := xml.NewDecoder(bytes.NewReader(data))
 	p.CharsetReader = charsetReader
 	err := p.Decode(&feed)
@@ -29,14 +29,8 @@ func parseRSS2(data []byte) (*Feed, error) {
 	out.Language = channel.Language
 	out.Author = channel.Author
 	out.Description = channel.Description
-	out.Link = extractLink(channel.Link)
 	out.Categories = channel.Categories.toArray()
-	for _, link := range channel.Link {
-		if link.Rel == "" && link.Type == "" && link.Href == "" && link.Chardata != "" {
-			out.Link = link.Chardata
-			break
-		}
-	}
+	out.Link = extractLink(channel.Link)
 	out.Image = channel.Image.Image()
 	if channel.MinsToLive != 0 {
 		sort.Ints(channel.SkipHours)
@@ -94,8 +88,8 @@ func parseRSS2(data []byte) (*Feed, error) {
 		next.Summary = item.Description
 		next.Content = item.Content
 		next.Categories = item.Categories
-		next.Image = item.Image.Image()
 		next.Link = extractLink(item.Link)
+		next.Image = item.Image.Image()
 		if item.Date != "" {
 			next.Date, err = parseTime(item.Date)
 			if err == nil {
@@ -141,7 +135,7 @@ func parseRSS2(data []byte) (*Feed, error) {
 	return out, nil
 }
 
-func extractLink(links []rss2_0Link) string {
+func extractLink(links []rss20Link) string {
 	for _, link := range links {
 		if link.Rel == "" && link.Type == "" && link.Href == "" && link.Chardata != "" {
 			return link.Chardata
@@ -150,81 +144,81 @@ func extractLink(links []rss2_0Link) string {
 	return ""
 }
 
-type rss2_0Feed struct {
-	XMLName xml.Name       `xml:"rss"`
-	Channel *rss2_0Channel `xml:"channel"`
+type rss20Feed struct {
+	XMLName xml.Name      `xml:"rss"`
+	Channel *rss20Channel `xml:"channel"`
 }
 
-type rss2_0Category struct {
+type rss20Category struct {
 	XMLName xml.Name `xml:"category"`
 	Name    string   `xml:"text,attr"`
 }
 
-type rss2_0CategorySlice []rss2_0Category
+type rss20CategorySlice []rss20Category
 
-func (r rss2_0CategorySlice) toArray() (result []string) {
+func (r rss20CategorySlice) toArray() (result []string) {
 	count := len(r)
 	if count == 0 || r == nil {
 		return
 	}
 	result = make([]string, count)
-	for i, _ := range r {
+	for i := range r {
 		result[i] = r[i].Name
 	}
 	return
 }
 
-type rss2_0Channel struct {
-	XMLName     xml.Name            `xml:"channel"`
-	Title       string              `xml:"title"`
-	Language    string              `xml:"language"`
-	Author      string              `xml:"author"`
-	Description string              `xml:"description"`
-	Link        []rss2_0Link        `xml:"link"`
-	Image       rss2_0Image         `xml:"image"`
-	Categories  rss2_0CategorySlice `xml:"category"`
-	Items       []rss2_0Item        `xml:"item"`
-	MinsToLive  int                 `xml:"ttl"`
-	SkipHours   []int               `xml:"skipHours>hour"`
-	SkipDays    []string            `xml:"skipDays>day"`
+type rss20Channel struct {
+	XMLName     xml.Name           `xml:"channel"`
+	Title       string             `xml:"title"`
+	Language    string             `xml:"language"`
+	Author      string             `xml:"author"`
+	Description string             `xml:"description"`
+	Link        []rss20Link        `xml:"link"`
+	Image       rss20Image         `xml:"image"`
+	Categories  rss20CategorySlice `xml:"category"`
+	Items       []rss20item        `xml:"item"`
+	MinsToLive  int                `xml:"ttl"`
+	SkipHours   []int              `xml:"skipHours>hour"`
+	SkipDays    []string           `xml:"skipDays>day"`
 }
 
-type rss2_0Link struct {
+type rss20Link struct {
 	Rel      string `xml:"rel,attr"`
 	Href     string `xml:"href,attr"`
 	Type     string `xml:"type,attr"`
 	Chardata string `xml:",chardata"`
 }
 
-type rss2_0Categories []string
+type rss20Categories []string
 
-type rss2_0Item struct {
-	XMLName     xml.Name         `xml:"item"`
-	Title       string           `xml:"title"`
-	Description string           `xml:"description"`
-	Content     string           `xml:"encoded"`
-	Categories  rss2_0Categories `xml:"category"`
-	Image       rss2_0Image      `xml:"image"`
-	Link        []rss2_0Link     `xml:"link"`
-	PubDate     string           `xml:"pubDate"`
-	Date        string           `xml:"date"`
+type rss20item struct {
+	XMLName     xml.Name        `xml:"item"`
+	Title       string          `xml:"title"`
+	Description string          `xml:"description"`
+	Content     string          `xml:"encoded"`
+	Categories  rss20Categories `xml:"category"`
+	PubDate     string          `xml:"pubDate"`
+	Date        string          `xml:"date"`
+	Image       rss20Image      `xml:"image"`
+	Link        []rss20Link     `xml:"link"`
 	DateValid   bool
-	ID          string            `xml:"guid"`
-	Enclosures  []rss2_0Enclosure `xml:"enclosure"`
+	ID          string           `xml:"guid"`
+	Enclosures  []rss20Enclosure `xml:"enclosure"`
 	// Support for Yahoo Media RSS, see https://www.rssboard.org/media-rss.
 	MediaGroup     mrssGroup     `xml:"http://search.yahoo.com/mrss/ group"`
 	MediaContent   mrssContent   `xml:"http://search.yahoo.com/mrss/ content"`
 	MediaThumbnail mrssThumbnail `xml:"http://search.yahoo.com/mrss/ thumbnail"`
 }
 
-type rss2_0Enclosure struct {
+type rss20Enclosure struct {
 	XMLName xml.Name `xml:"enclosure"`
 	URL     string   `xml:"url,attr"`
 	Type    string   `xml:"type,attr"`
 	Length  uint     `xml:"length,attr"`
 }
 
-func (r *rss2_0Enclosure) Enclosure() *Enclosure {
+func (r *rss20Enclosure) Enclosure() *Enclosure {
 	out := new(Enclosure)
 	out.URL = r.URL
 	out.Type = r.Type
@@ -232,7 +226,7 @@ func (r *rss2_0Enclosure) Enclosure() *Enclosure {
 	return out
 }
 
-type rss2_0Image struct {
+type rss20Image struct {
 	XMLName xml.Name `xml:"image"`
 	Href    string   `xml:"href,attr"`
 	Title   string   `xml:"title"`
@@ -241,7 +235,7 @@ type rss2_0Image struct {
 	Width   int      `xml:"width"`
 }
 
-func (i *rss2_0Image) Image() *Image {
+func (i *rss20Image) Image() *Image {
 	out := new(Image)
 	out.Title = i.Title
 	out.Href = i.Href

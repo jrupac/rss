@@ -73,12 +73,14 @@ type Image struct {
 }
 ```
 
-The library does its best to follow the appropriate specifications and not to set the Refresh time
-too soon. It currently follows all update time management methods in the RSS 1.0, 2.0, and Atom 1.0
-specifications. If one is not provided, it defaults to 12 hour intervals (see DefaultRefreshInterval). If you are having issues
-with feed providers dropping connections, please let me know and I can increase this default, or you
-can increase the Refresh time manually. The Feed.Update method uses this Refresh time, so if Update
-seems to be returning very quickly with no new items, it's likely not making a request due to the
-provider's Refresh interval.
+The library does its best to follow the appropriate specifications and not to
+set the Refresh time too soon. It currently follows all update time management
+methods in the RSS 1.0, 2.0, and Atom 1.0 specifications. If one is not
+provided, it defaults to 12 hour intervals (see DefaultRefreshInterval). If you are having issues
+with feed providers dropping connections, please let me know and I can increase
+this default, or you can increase the Refresh time manually. The Feed.Update
+method uses this Refresh time, so if Update seems to be returning very quickly
+with no new items, it's likely not making a request due to the provider's
+Refresh interval.
 
 The project is not proactively maintained, but I'll respond to issues and PRs as soon as I can.
