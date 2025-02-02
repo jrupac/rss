@@ -59,11 +59,11 @@ func TestParseContent(t *testing.T) {
 
 func TestParseItemDateOK(t *testing.T) {
 	tests := map[string]string{
-		"rss_2.0":                 "2009-09-06 16:45:00 +0000 +0000",
-		"rss_2.0_content_encoded": "2009-09-06 16:45:00 +0000 +0000",
-		"rss_2.0_enclosure":       "2009-09-06 16:45:00 +0000 +0000",
-		"rss_2.0-1":               "2003-06-03 09:39:21 +0000 GMT",
-		"rss_2.0-1_enclosure":     "2016-05-14 18:39:34 +0300 +0300",
+		"rss_2.0":                 "2009-09-06 16:45:00 +0000 UTC",
+		"rss_2.0_content_encoded": "2009-09-06 16:45:00 +0000 UTC",
+		"rss_2.0_enclosure":       "2009-09-06 16:45:00 +0000 UTC",
+		"rss_2.0-1":               "2003-06-03 09:39:21 +0000 UTC",
+		"rss_2.0-1_enclosure":     "2016-05-14 15:39:34 +0000 UTC",
 	}
 
 	for test, want := range tests {
@@ -80,8 +80,8 @@ func TestParseItemDateOK(t *testing.T) {
 
 		if !feed.Items[0].DateValid {
 			t.Errorf("%s: date %q invalid!", name, feed.Items[0].Date)
-		} else if fmt.Sprintf("%s", feed.Items[0].Date) != want {
-			t.Errorf("%s: got %q, want %q", name, feed.Items[0].Date, want)
+		} else if got := feed.Items[0].Date.UTC().String(); got != want {
+			t.Errorf("%s: got %q, want %q", name, got, want)
 		}
 	}
 }
@@ -134,6 +134,67 @@ func TestParseCategories(t *testing.T) {
 		if len(feed.Items[0].Categories) != want {
 			t.Errorf("%s: got %q, want %q", name, feed.Items[0].Categories, want)
 		}
+	}
+}
+
+func TestParseChannelCategories(t *testing.T) {
+	tests := map[string]int{
+		"rss_2.0-1_enclosure": 2,
+		"rss_2.0_enclosure":   1,
+	}
+
+	for test, want := range tests {
+		name := filepath.Join("testdata", test)
+		data, err := ioutil.ReadFile(name)
+		if err != nil {
+			t.Fatalf("Reading %s: %v", name, err)
+		}
+
+		feed, err := Parse(data)
+		if err != nil {
+			t.Fatalf("Parsing %s: %v", name, err)
+		}
+
+		if len(feed.Categories) != want {
+			t.Errorf("%s: got %q, want %q", name, feed.Items[0].Categories, want)
+		}
+	}
+}
+
+func TestChannelProperties(t *testing.T) {
+	tests := []struct {
+		name     string
+		testdata string
+		verify   func(t *testing.T, feed *Feed)
+	}{{
+		name:     "normal case",
+		testdata: "rss_2.0_content_encoded",
+		verify: func(t *testing.T, feed *Feed) {
+			assertEqual("en", feed.Language, t)
+			assertEqual("someone", feed.Author, t)
+		},
+	}}
+	for i := range tests {
+		tt := tests[i]
+		t.Run(tt.name, func(t *testing.T) {
+			name := filepath.Join("testdata", tt.testdata)
+			data, err := ioutil.ReadFile(name)
+			if err != nil {
+				t.Fatalf("Reading %s: %v", name, err)
+			}
+
+			feed, err := Parse(data)
+			if err != nil {
+				t.Fatalf("Parsing %s: %v", name, err)
+			}
+			tt.verify(t, feed)
+		})
+	}
+}
+
+func assertEqual(expected, got string, t *testing.T) {
+	if expected != got {
+		t.Errorf("expect '%s', got '%s'", expected, got)
 	}
 }
 

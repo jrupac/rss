@@ -93,10 +93,13 @@ func FetchByFunc(fetchFunc FetchFunc, url string) (*Feed, error) {
 type Feed struct {
 	Nickname    string              `json:"nickname"` // This is not set by the package, but could be helpful.
 	Title       string              `json:"title"`
+	Language    string              `json:"language"`
+	Author      string              `json:"author"`
 	Description string              `json:"description"`
 	Link        string              `json:"link"`      // Link to the creator's website.
 	UpdateURL   string              `json:"updateurl"` // URL of the feed itself.
 	Image       *Image              `json:"image"`     // Feed icon.
+	Categories  []string            `json:"categories"`
 	Items       []*Item             `json:"items"`
 	ItemMap     map[string]struct{} `json:"itemmap"` // Used in checking whether an item has been seen before.
 	Refresh     time.Time           `json:"refresh"` // Earliest time this feed should next be checked.
@@ -121,6 +124,20 @@ func (r refreshError) Temporary() bool {
 }
 
 var errUpdateNotReady refreshError = "not ready to update: too soon to refresh"
+
+// DefaultRefreshInterval is the minimum
+// wait until the next refresh, provided
+// the feed does not provide its own
+// interval.
+//
+// Setting this too high will delay the
+// feed receiving new items, setting it
+// too low will put excessive load on
+// the feed hosts.
+//
+// The default value is 12 hours.
+//
+var DefaultRefreshInterval = 12 * time.Hour
 
 // Update fetches any new items and updates f.
 func (f *Feed) Update() error {
@@ -214,6 +231,7 @@ type Item struct {
 	Categories []string  `json:"category"`
 	Link       string    `json:"link"`
 	Date       time.Time `json:"date"`
+	Image      *Image    `json:"image"`
 	DateValid  bool
 	ID         string       `json:"id"`
 	Enclosures []*Enclosure `json:"enclosures"`
@@ -278,6 +296,7 @@ func (e *Enclosure) Get() (io.ReadCloser, error) {
 // Image maps an image.
 type Image struct {
 	Title  string `json:"title"`
+	Href   string `json:"href"`
 	URL    string `json:"url"`
 	Height uint32 `json:"height"`
 	Width  uint32 `json:"width"`

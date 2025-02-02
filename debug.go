@@ -1,5 +1,6 @@
 // go run debug.go [URL]
 
+//go:build ignore
 // +build ignore
 
 package main
@@ -11,7 +12,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/SlyMarbo/rss"
+	"github.com/jrupac/rss"
 )
 
 func main() {
